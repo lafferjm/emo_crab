@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::Read;
+
 struct Chip8 {
     registers: [u8; 16],
     memory: [u8; 4096],
@@ -28,9 +31,25 @@ impl Chip8 {
             opcode: 0x0,
         }
     }
+
+    pub fn load_rom(&mut self, file_path: &str) -> std::io::Result<()> {
+        let mut file = File::open(file_path)?;
+        let mut contents = vec![];
+        file.read_to_end(&mut contents)?;
+
+        for (i, value) in contents.iter().enumerate() {
+            self.memory[0x200 + i] = *value;
+        }
+
+        Ok(())
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
-    let chip8 = Chip8::new();
+    let mut chip8 = Chip8::new();
+
+    if let Err(e) = chip8.load_rom("./roms/test_opcode.ch8") {
+        eprintln!("Error loading rom: {}", e);
+        std::process::exit(1);
+    }
 }
