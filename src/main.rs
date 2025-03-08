@@ -1,6 +1,8 @@
 use std::fs::File;
 use std::io::Read;
 
+use macroquad::window::{Conf, next_frame};
+
 struct Chip8 {
     registers: [u8; 16],
     memory: [u8; 4096],
@@ -70,11 +72,27 @@ impl Chip8 {
     }
 }
 
-fn main() {
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Emo Crab".to_string(),
+        fullscreen: false,
+        window_resizable: false,
+        window_width: 64 * 16,
+        window_height: 32 * 16,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
+async fn main() {
     let mut chip8 = Chip8::new();
 
     if let Err(e) = chip8.load_rom("./roms/test_opcode.ch8") {
         eprintln!("Error loading rom: {}", e);
         std::process::exit(1);
+    }
+
+    loop {
+        next_frame().await
     }
 }
