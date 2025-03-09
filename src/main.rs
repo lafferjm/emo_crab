@@ -49,6 +49,7 @@ impl Chip8 {
             memory,
             index: 0x0,
             pc: 0x200,
+            // Maybe I can replace stack and sp with a vector, future test
             stack: [0x0; 16],
             sp: 0x0,
             delay_timer: 0x0,
@@ -69,6 +70,14 @@ impl Chip8 {
         }
 
         Ok(())
+    }
+
+    pub fn get_instruction(&mut self) -> u16 {
+        let instruction = (self.memory[self.pc as usize] as u16) << 8 | (self.memory[(self.pc + 1) as usize] as u16);
+
+        self.pc = self.pc + 2;
+
+        instruction
     }
 }
 
@@ -93,6 +102,8 @@ async fn main() {
     }
 
     loop {
+        let instruction = chip8.get_instruction();
+
         next_frame().await
     }
 }
