@@ -49,6 +49,7 @@ impl Chip8 {
             memory,
             index: 0x0,
             pc: 0x200,
+            // Maybe I can replace stack and sp with a vector, future test
             stack: [0x0; 16],
             sp: 0x0,
             delay_timer: 0x0,
@@ -70,6 +71,49 @@ impl Chip8 {
 
         Ok(())
     }
+
+    pub fn get_instruction(&mut self) -> u16 {
+        let instruction = (self.memory[self.pc as usize] as u16) << 8 | (self.memory[(self.pc + 1) as usize] as u16);
+
+        self.pc = self.pc + 2;
+
+        instruction
+    }
+
+    pub fn decode_instruction(&mut self, instruction: u16) {
+        match (instruction & 0xF000) >> 12 {
+            0x0 => self.video = [0x0; 64 * 32],
+            0x1 => self.jump(instruction),
+            0x6 => self.set_register(instruction),
+            0x7 => self.add_to_register(instruction),
+            0xA => self.set_index_register(instruction),
+            0xD => println!("Draw: {:?}", instruction),
+            _ => eprintln!("Unknown instruction: {:?}", instruction),
+        }
+    }
+
+    fn jump(&mut self, instruction: u16) {
+        self.pc = instruction & 0x0FFF;
+    }
+
+    fn set_register(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        self.registers[register as usize] = value as u8;
+    }
+
+    fn add_to_register(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        self.registers[register as usize] = self.registers[register as usize] + value as u8;
+    }
+
+    fn set_index_register(&mut self, instruction: u16) {
+        let value = instruction & 0x0FFF;
+        self.index = value as u8;
+    }
 }
 
 fn window_conf() -> Conf {
@@ -87,12 +131,15 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("./roms/test_opcode.ch8") {
+    if let Err(e) = chip8.load_rom("./roms/ibm_logo.ch8") {
         eprintln!("Error loading rom: {}", e);
         std::process::exit(1);
     }
 
     loop {
+        let instruction = chip8.get_instruction();
+        chip8.decode_instruction(instruction);
+
         next_frame().await
     }
 }
