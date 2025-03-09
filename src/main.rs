@@ -114,6 +114,39 @@ impl Chip8 {
         let value = instruction & 0x0FFF;
         self.index = value as u8;
     }
+
+    fn draw(&mut self, instruction: u16) {
+        let x = (instruction & 0x0F00) >> 8;
+        let x = self.registers[x as usize] % 64;
+
+        let y = (instruction & 0x00F0) >> 4;
+        let y = self.registers[y as usize] % 32;
+
+        let height = instruction & 0x000F;
+
+        self.registers[0xF] = 0;
+
+        for row in 0..height {
+            let sprite = self.memory[(self.index as u16 + row) as usize];
+
+            for column in 0..8 {
+                // 0x80 == 1000_0000 we are checking each value by shifting each time
+                let pixel = sprite & (0x80 >> column);
+
+                if pixel != 0 {
+                    let x_pos = (x + column) % 64;
+                    let y_pos = (y + row as u8) % 32;
+                    let index = y_pos as usize * 64 + x_pos as usize;
+
+                    if self.video[index] == 1 {
+                        self.registers[0xF] = 1;
+                    }
+                    self.video[index] ^= 1;
+                }
+
+            }
+        }
+    }
 }
 
 fn window_conf() -> Conf {
