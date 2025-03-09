@@ -79,6 +79,17 @@ impl Chip8 {
 
         instruction
     }
+
+    pub fn decode_instruction(&self, instruction: u16) {
+        match (instruction & 0xF000) >> 12 {
+            0x0 => println!("Clear Screen: {:?}", instruction),
+            0x1 => println!("Jump: {:?}", instruction),
+            0x6 => println!("Set Register: {:?}", instruction),
+            0x7 => println!("Set index: {:?}", instruction),
+            0xD => println!("Draw: {:?}", instruction),
+            _ => eprintln!("Unknown instruction"),
+        }
+    }
 }
 
 fn window_conf() -> Conf {
@@ -103,6 +114,7 @@ async fn main() {
 
     loop {
         let instruction = chip8.get_instruction();
+        chip8.decode_instruction(instruction);
 
         next_frame().await
     }
