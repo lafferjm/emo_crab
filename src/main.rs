@@ -84,7 +84,7 @@ impl Chip8 {
         match (instruction & 0xF000) >> 12 {
             0x0 => self.video = [0x0; 64 * 32],
             0x1 => self.jump(instruction),
-            0x6 => println!("Set Register: {:?}", instruction),
+            0x6 => self.set_register(instruction),
             0x7 => println!("Set index: {:?}", instruction),
             0xD => println!("Draw: {:?}", instruction),
             _ => eprintln!("Unknown instruction"),
@@ -93,6 +93,13 @@ impl Chip8 {
 
     fn jump(&mut self, instruction: u16) {
         self.pc = instruction & 0x0FFF;
+    }
+
+    fn set_register(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        self.registers[register] = value;
     }
 }
 
