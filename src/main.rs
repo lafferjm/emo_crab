@@ -80,9 +80,9 @@ impl Chip8 {
         instruction
     }
 
-    pub fn decode_instruction(&self, instruction: u16) {
+    pub fn decode_instruction(&mut self, instruction: u16) {
         match (instruction & 0xF000) >> 12 {
-            0x0 => println!("Clear Screen: {:?}", instruction),
+            0x0 => self.video = [0x0; 64 * 32],
             0x1 => println!("Jump: {:?}", instruction),
             0x6 => println!("Set Register: {:?}", instruction),
             0x7 => println!("Set index: {:?}", instruction),
@@ -107,7 +107,7 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("./roms/test_opcode.ch8") {
+    if let Err(e) = chip8.load_rom("./roms/ibm_logo.ch8") {
         eprintln!("Error loading rom: {}", e);
         std::process::exit(1);
     }
