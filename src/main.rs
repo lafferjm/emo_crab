@@ -86,7 +86,7 @@ impl Chip8 {
             0x1 => self.jump(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
-            0xA => println!("set index register: {:?}", instruction),
+            0xA => self.set_index_register(instruction),
             0xD => println!("Draw: {:?}", instruction),
             _ => eprintln!("Unknown instruction: {:?}", instruction),
         }
@@ -108,6 +108,11 @@ impl Chip8 {
         let value = instruction & 0x00FF;
 
         self.registers[register as usize] = self.registers[register as usize] + value as u8;
+    }
+
+    fn set_index_register(&mut self, instruction: u16) {
+        let value = instruction & 0x0FFF;
+        self.index = value as u8;
     }
 }
 
