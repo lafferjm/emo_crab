@@ -85,9 +85,10 @@ impl Chip8 {
             0x0 => self.video = [0x0; 64 * 32],
             0x1 => self.jump(instruction),
             0x6 => self.set_register(instruction),
-            0x7 => println!("Set index: {:?}", instruction),
+            0x7 => self.add_to_register(instruction),
+            0xA => println!("set index register: {:?}", instruction),
             0xD => println!("Draw: {:?}", instruction),
-            _ => eprintln!("Unknown instruction"),
+            _ => eprintln!("Unknown instruction: {:?}", instruction),
         }
     }
 
@@ -99,7 +100,14 @@ impl Chip8 {
         let register = (instruction & 0x0F00) >> 8;
         let value = instruction & 0x00FF;
 
-        self.registers[register] = value;
+        self.registers[register as usize] = value as u8;
+    }
+
+    fn add_to_register(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        self.registers[register as usize] = self.registers[register as usize] + value as u8;
     }
 }
 
