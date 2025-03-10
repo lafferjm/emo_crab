@@ -1,3 +1,4 @@
+use std::env;
 use std::fs::File;
 use std::io::Read;
 
@@ -5,15 +6,15 @@ use macroquad::{color, shapes};
 use macroquad::window::{Conf, next_frame, clear_background};
 
 struct Chip8 {
-    registers: [u8; 16],
-    memory: [u8; 4096],
+    registers: [u16; 16],
+    memory: [u16; 4096],
     index: u16,
     pc: u16,
-    stack: [u8; 16],
-    sp: u8,
-    delay_timer: u8,
-    sound_timer: u8,
-    keypad: [u8; 16],
+    stack: [u16; 16],
+    sp: u16,
+    delay_timer: u16,
+    sound_timer: u16,
+    keypad: [u16; 16],
     video: [u32; 64 * 32],
     opcode: u16,
 }
@@ -21,7 +22,7 @@ struct Chip8 {
 impl Chip8 {
     pub fn new() -> Self {
         // stolen from varius chip 8 emulators
-        let font: [u8; 80] = [
+        let font: [u16; 80] = [
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
             0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -40,7 +41,7 @@ impl Chip8 {
             0xF0, 0x80, 0xF0, 0x80, 0x80, // F
         ];
 
-        let mut memory: [u8; 4096] = [0x0; 4096];
+        let mut memory: [u16; 4096] = [0x0; 4096];
         for (i, value) in font.iter().enumerate() {
             memory[0x50 + i] = *value;
         }
@@ -67,7 +68,7 @@ impl Chip8 {
         file.read_to_end(&mut contents)?;
 
         for (i, value) in contents.iter().enumerate() {
-            self.memory[0x200 + i] = *value;
+            self.memory[0x200 + i] = *value as u16;
         }
 
         Ok(())
@@ -111,14 +112,14 @@ impl Chip8 {
         let register = (instruction & 0x0F00) >> 8;
         let value = instruction & 0x00FF;
 
-        self.registers[register as usize] = value as u8;
+        self.registers[register as usize] = value;
     }
 
     fn add_to_register(&mut self, instruction: u16) {
         let register = (instruction & 0x0F00) >> 8;
         let value = instruction & 0x00FF;
 
-        self.registers[register as usize] = self.registers[register as usize] + value as u8;
+        self.registers[register as usize] = self.registers[register as usize] + value;
     }
 
     fn set_index_register(&mut self, instruction: u16) {
@@ -146,7 +147,7 @@ impl Chip8 {
 
                 if pixel != 0 {
                     let x_pos = (x + column) % 64;
-                    let y_pos = (y + row as u8) % 32;
+                    let y_pos = (y + row) % 32;
                     let index = y_pos as usize * 64 + x_pos as usize;
 
                     if self.video[index] == 1 {
@@ -173,9 +174,15 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let args = env::args().collect::<Vec<String>>();
+    if args.len() < 2 {
+        println!("Usage: emo_crab <rom>");
+        std::process::exit(1);
+    }
+
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("./roms/ibm_logo.ch8") {
+    if let Err(e) = chip8.load_rom(&args[1]) {
         eprintln!("Error loading rom: {}", e);
         std::process::exit(1);
     }
