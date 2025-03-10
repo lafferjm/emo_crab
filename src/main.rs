@@ -1,12 +1,13 @@
 use std::fs::File;
 use std::io::Read;
 
-use macroquad::window::{Conf, next_frame};
+use macroquad::{color, shapes};
+use macroquad::window::{Conf, next_frame, clear_background};
 
 struct Chip8 {
     registers: [u8; 16],
     memory: [u8; 4096],
-    index: u8,
+    index: u16,
     pc: u16,
     stack: [u8; 16],
     sp: u8,
@@ -87,8 +88,18 @@ impl Chip8 {
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
             0xA => self.set_index_register(instruction),
-            0xD => println!("Draw: {:?}", instruction),
+            0xD => self.draw(instruction),
             _ => eprintln!("Unknown instruction: {:?}", instruction),
+        }
+    }
+
+    pub fn render(&self) {
+        for x in 0..64 {
+            for y in 0..32 {
+                if (self.video[y * 64 + x] == 1) {
+                    shapes::draw_rectangle(x as f32 * 16., y as f32 * 16., 16., 16., color::WHITE);
+                }
+            }
         }
     }
 
@@ -112,7 +123,40 @@ impl Chip8 {
 
     fn set_index_register(&mut self, instruction: u16) {
         let value = instruction & 0x0FFF;
-        self.index = value as u8;
+        self.index = value;
+    }
+
+    fn draw(&mut self, instruction: u16) {
+        let x = (instruction & 0x0F00) >> 8;
+        let x = self.registers[x as usize] % 64;
+
+        let y = (instruction & 0x00F0) >> 4;
+        let y = self.registers[y as usize] % 32;
+
+        let height = instruction & 0x000F;
+
+        self.registers[0xF] = 0;
+
+        for row in 0..height {
+            let sprite = self.memory[(self.index + row) as usize];
+
+            for column in 0..8 {
+                // 0x80 == 1000_0000 we are checking each value by shifting each time
+                let pixel = sprite & (0x80 >> column);
+
+                if pixel != 0 {
+                    let x_pos = (x + column) % 64;
+                    let y_pos = (y + row as u8) % 32;
+                    let index = y_pos as usize * 64 + x_pos as usize;
+
+                    if self.video[index] == 1 {
+                        self.registers[0xF] = 1;
+                    }
+                    self.video[index] ^= 1;
+                }
+
+            }
+        }
     }
 }
 
@@ -137,9 +181,12 @@ async fn main() {
     }
 
     loop {
+        clear_background(color::BLACK);
+
         let instruction = chip8.get_instruction();
         chip8.decode_instruction(instruction);
 
+        chip8.render();
         next_frame().await
     }
 }
