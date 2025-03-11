@@ -2,8 +2,8 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 
+use macroquad::window::{Conf, clear_background, next_frame};
 use macroquad::{color, shapes};
-use macroquad::window::{Conf, next_frame, clear_background};
 
 struct Chip8 {
     registers: [u16; 16],
@@ -75,7 +75,8 @@ impl Chip8 {
     }
 
     pub fn get_instruction(&mut self) -> u16 {
-        let instruction = (self.memory[self.pc as usize] as u16) << 8 | (self.memory[(self.pc + 1) as usize] as u16);
+        let instruction = (self.memory[self.pc as usize] as u16) << 8
+            | (self.memory[(self.pc + 1) as usize] as u16);
 
         self.pc = self.pc + 2;
 
@@ -84,8 +85,20 @@ impl Chip8 {
 
     pub fn decode_instruction(&mut self, instruction: u16) {
         match (instruction & 0xF000) >> 12 {
-            0x0 => self.video = [0x0; 64 * 32],
+            0x0 => {
+                // Clear screen
+                if instruction & 0x00FF == 0xE0 {
+                    self.video = [0x0; 64 * 32];
+                }
+
+                // return from subroutine
+                if instruction & 0x0FF == 0xEE {
+                    self.sp -= 1;
+                    self.pc = self.stack[self.sp as usize];
+                }
+            }
             0x1 => self.jump(instruction),
+            0x2 => self.call_subroutine(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
             0xA => self.set_index_register(instruction),
@@ -155,9 +168,15 @@ impl Chip8 {
                     }
                     self.video[index] ^= 1;
                 }
-
             }
         }
+    }
+
+    fn call_subroutine(&mut self, instruction: u16) {
+        let location = instruction & 0x0FFF;
+        self.stack[self.sp as usize] = self.pc;
+        self.sp += 1;
+        self.pc = location;
     }
 }
 
