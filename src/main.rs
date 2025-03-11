@@ -93,10 +93,12 @@ impl Chip8 {
 
                 // return from subroutine
                 if instruction & 0x0FF == 0xEE {
+                    self.sp -= 1;
                     self.pc = self.stack[self.sp as usize];
                 }
             }
             0x1 => self.jump(instruction),
+            0x2 => self.call_subroutine(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
             0xA => self.set_index_register(instruction),
@@ -168,6 +170,13 @@ impl Chip8 {
                 }
             }
         }
+    }
+
+    fn call_subroutine(&mut self, instruction: u16) {
+        let location = instruction & 0x0FFF;
+        self.stack[self.sp as usize] = self.pc;
+        self.sp += 1;
+        self.pc = location;
     }
 }
 
