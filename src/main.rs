@@ -73,10 +73,9 @@ impl Chip8 {
     }
 
     pub fn get_instruction(&mut self) -> u16 {
-        let instruction = (self.memory[self.pc as usize] as u16) << 8
-            | (self.memory[(self.pc + 1) as usize] as u16);
+        let instruction = (self.memory[self.pc as usize] << 8) | self.memory[(self.pc + 1) as usize];
 
-        self.pc = self.pc + 2;
+        self.pc += 2;
 
         instruction
     }
@@ -102,7 +101,7 @@ impl Chip8 {
             0x5 => self.skip_if_registers_equal(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
-            0x8 => match (instruction & 0x000F) {
+            0x8 => match instruction & 0x000F {
                 0x0 => self.set_x_register(instruction),
                 _ => eprintln!("Unknown instruction: {:?}", instruction),
             },
@@ -116,7 +115,7 @@ impl Chip8 {
     pub fn render(&self) {
         for x in 0..64 {
             for y in 0..32 {
-                if (self.video[y * 64 + x] == 1) {
+                if self.video[y * 64 + x] == 1 {
                     shapes::draw_rectangle(x as f32 * 16., y as f32 * 16., 16., 16., color::WHITE);
                 }
             }
@@ -138,7 +137,7 @@ impl Chip8 {
         let register = (instruction & 0x0F00) >> 8;
         let value = instruction & 0x00FF;
 
-        self.registers[register as usize] = self.registers[register as usize] + value;
+        self.registers[register as usize] += value;
     }
 
     fn set_index_register(&mut self, instruction: u16) {
