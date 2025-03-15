@@ -99,8 +99,12 @@ impl Chip8 {
             }
             0x1 => self.jump(instruction),
             0x2 => self.call_subroutine(instruction),
+            0x3 => self.skip_if_equal(instruction),
+            0x4 => self.skip_if_not_equal(instruction),
+            0x5 => self.skip_if_registers_equal(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
+            0x9 => self.skip_if_registers_not_equal(instruction),
             0xA => self.set_index_register(instruction),
             0xD => self.draw(instruction),
             _ => eprintln!("Unknown instruction: {:?}", instruction),
@@ -177,6 +181,42 @@ impl Chip8 {
         self.stack[self.sp as usize] = self.pc;
         self.sp += 1;
         self.pc = location;
+    }
+
+    fn skip_if_equal(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        if self.registers[register as usize] == value {
+            self.pc += 2;
+        }
+    }
+
+    fn skip_if_not_equal(&mut self, instruction: u16) {
+        let register = (instruction & 0x0F00) >> 8;
+        let value = instruction & 0x00FF;
+
+        if self.registers[register as usize] != value {
+            self.pc += 2;
+        }
+    }
+
+    fn skip_if_registers_equal(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        if self.registers[x_register as usize] == self.registers[y_register as usize] {
+            self.pc += 2;
+        }
+    }
+
+    fn skip_if_registers_not_equal(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        if self.registers[x_register as usize] != self.registers[y_register as usize] {
+            self.pc += 2;
+        }
     }
 }
 
