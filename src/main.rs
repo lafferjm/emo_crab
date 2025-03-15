@@ -104,6 +104,9 @@ impl Chip8 {
             0x7 => self.add_to_register(instruction),
             0x8 => match instruction & 0x000F {
                 0x0 => self.set_x_register(instruction),
+                0x1 => self.binary_or(instruction),
+                0x2 => self.binary_and(instruction),
+                0x3 => self.logical_xor(instruction),
                 _ => eprintln!("Unknown instruction: {:?}", instruction),
             },
             0x9 => self.skip_if_registers_not_equal(instruction),
@@ -226,6 +229,27 @@ impl Chip8 {
         let y_register = (instruction & 0x00F0) >> 4;
 
         self.registers[x_register as usize] = self.registers[y_register as usize];
+    }
+
+    fn binary_or(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        self.registers[x_register as usize] |= self.registers[y_register as usize];
+    }
+
+    fn binary_and(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        self.registers[x_register as usize] &= self.registers[y_register as usize];
+    }
+
+    fn logical_xor(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        self.registers[x_register as usize] ^= self.registers[y_register as usize];
     }
 }
 
