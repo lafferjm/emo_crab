@@ -16,7 +16,6 @@ struct Chip8 {
     sound_timer: u16,
     keypad: [u16; 16],
     video: [u32; 64 * 32],
-    opcode: u16,
 }
 
 impl Chip8 {
@@ -58,7 +57,6 @@ impl Chip8 {
             sound_timer: 0x0,
             keypad: [0x0; 16],
             video: [0x0; 64 * 32],
-            opcode: 0x0,
         }
     }
 
@@ -104,6 +102,10 @@ impl Chip8 {
             0x5 => self.skip_if_registers_equal(instruction),
             0x6 => self.set_register(instruction),
             0x7 => self.add_to_register(instruction),
+            0x8 => match (instruction & 0x000F) {
+                0x0 => self.set_x_register(instruction),
+                _ => eprintln!("Unknown instruction: {:?}", instruction),
+            },
             0x9 => self.skip_if_registers_not_equal(instruction),
             0xA => self.set_index_register(instruction),
             0xD => self.draw(instruction),
@@ -217,6 +219,13 @@ impl Chip8 {
         if self.registers[x_register as usize] != self.registers[y_register as usize] {
             self.pc += 2;
         }
+    }
+
+    fn set_x_register(&mut self, instruction: u16) {
+        let x_register = (instruction & 0x0F00) >> 8;
+        let y_register = (instruction & 0x00F0) >> 4;
+
+        self.registers[x_register as usize] = self.registers[y_register as usize];
     }
 }
 
