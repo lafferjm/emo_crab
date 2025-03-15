@@ -71,8 +71,8 @@ impl Chip8 {
     }
 
     pub fn get_instruction(&mut self) -> u16 {
-        let instruction =
-            (self.memory[self.pc as usize] as u16) << 8 | self.memory[self.pc as usize + 1] as u16;
+        let instruction = ((self.memory[self.pc as usize] as u16) << 8)
+            | self.memory[self.pc as usize + 1] as u16;
         self.pc += 2;
         instruction
     }
@@ -146,7 +146,7 @@ impl Chip8 {
         let y = ((instruction & 0x00F0) >> 4) as usize;
         let y = self.registers[y] % 32;
 
-        let height = (instruction & 0x000F) as u16;
+        let height = instruction & 0x000F;
 
         self.registers[0xF] = 0;
 
