@@ -73,7 +73,8 @@ impl Chip8 {
     }
 
     pub fn get_instruction(&mut self) -> u16 {
-        let instruction = (self.memory[self.pc as usize] << 8) | self.memory[(self.pc + 1) as usize];
+        let instruction =
+            (self.memory[self.pc as usize] << 8) | self.memory[(self.pc + 1) as usize];
 
         self.pc += 2;
 
