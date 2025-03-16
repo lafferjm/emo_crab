@@ -112,6 +112,10 @@ impl Chip8 {
             0xB => self.jump_with_offset(instruction),
             0xC => self.generate_random_number(instruction),
             0xD => self.draw(instruction),
+            0xF => match instruction & 0x00FF {
+                0x33 => self.binary_coded_decimal(instruction),
+                _ => eprintln!("Unknown instruction: {:?}", instruction),
+            },
             _ => eprintln!("Unknown instruction: {:?}", instruction),
         }
     }
@@ -310,6 +314,23 @@ impl Chip8 {
         let random_number: u8 = rand::random_range(0..255) & value;
 
         self.registers[x_register] = random_number;
+    }
+
+    fn binary_coded_decimal(&mut self, instruction: u16) {
+        let x_register = ((instruction & 0x0F00) >> 8) as usize;
+        let mut value = self.registers[x_register];
+
+        let ones = value % 10;
+        value /= 10;
+
+        let tens = value % 10;
+        value /= 10;
+
+        let hundreds = value % 10;
+
+        self.memory[self.index as usize] = hundreds;
+        self.memory[(self.index + 1) as usize] = tens;
+        self.memory[(self.index + 2) as usize] = ones;
     }
 }
 
