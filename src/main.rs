@@ -109,6 +109,7 @@ impl Chip8 {
             },
             0x9 => self.skip_if_registers_not_equal(instruction),
             0xA => self.set_index_register(instruction),
+            0xB => self.jump_with_offset(instruction),
             0xD => self.draw(instruction),
             _ => eprintln!("Unknown instruction: {:?}", instruction),
         }
@@ -294,6 +295,11 @@ impl Chip8 {
         self.registers[0xF] = ((instruction & 0x80) >> 7) as u8;
 
         self.registers[x_register] <<= 1;
+    }
+
+    fn jump_with_offset(&mut self, instruction: u16) {
+        let location = instruction & 0x0FFF;
+        self.pc = location + self.registers[0x0] as u16;
     }
 }
 
