@@ -101,6 +101,8 @@ impl Chip8 {
                 0x2 => self.binary_and(instruction),
                 0x3 => self.logical_xor(instruction),
                 0x4 => self.add_with_carry(instruction),
+                0x5 => self.register_x_minus_y(instruction),
+                0x7 => self.register_y_minus_x(instruction),
                 _ => eprintln!("Unknown instruction: {:?}", instruction),
             },
             0x9 => self.skip_if_registers_not_equal(instruction),
@@ -233,10 +235,10 @@ impl Chip8 {
     }
 
     fn add_with_carry(&mut self, instruction: u16) {
-        self.registers[0xF] = 0;
-
         let x_register = ((instruction & 0x0F00) >> 8) as usize;
         let y_register = ((instruction & 0x00F0) >> 4) as usize;
+
+        self.registers[0xF] = 0;
 
         let (value, did_overflow) =
             self.registers[x_register].overflowing_add(self.registers[y_register]);
@@ -246,6 +248,34 @@ impl Chip8 {
         if did_overflow {
             self.registers[0xF] = 1;
         }
+    }
+
+    fn register_x_minus_y(&mut self, instruction: u16) {
+        let x_register = ((instruction & 0x0F00) >> 8) as usize;
+        let y_register = ((instruction & 0x00F0) >> 4) as usize;
+
+        self.registers[0xF] = 1;
+
+        if self.registers[x_register] > self.registers[y_register] {
+            self.registers[0xF] = 0;
+        }
+
+        self.registers[x_register] =
+            self.registers[x_register].wrapping_sub(self.registers[y_register]);
+    }
+
+    fn register_y_minus_x(&mut self, instruction: u16) {
+        let x_register = ((instruction & 0x0F00) >> 8) as usize;
+        let y_register = ((instruction & 0x00F0) >> 4) as usize;
+
+        self.registers[0xF] = 1;
+
+        if self.registers[y_register] > self.registers[x_register] {
+            self.registers[0xF] = 0;
+        }
+
+        self.registers[x_register] =
+            self.registers[y_register].wrapping_sub(self.registers[x_register]);
     }
 }
 
