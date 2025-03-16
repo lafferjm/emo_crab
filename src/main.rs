@@ -102,7 +102,9 @@ impl Chip8 {
                 0x3 => self.logical_xor(instruction),
                 0x4 => self.add_with_carry(instruction),
                 0x5 => self.register_x_minus_y(instruction),
+                0x6 => self.shift_right(instruction),
                 0x7 => self.register_y_minus_x(instruction),
+                0xE => self.shift_left(instruction),
                 _ => eprintln!("Unknown instruction: {:?}", instruction),
             },
             0x9 => self.skip_if_registers_not_equal(instruction),
@@ -276,6 +278,22 @@ impl Chip8 {
 
         self.registers[x_register] =
             self.registers[y_register].wrapping_sub(self.registers[x_register]);
+    }
+
+    fn shift_right(&mut self, instruction: u16) {
+        let x_register = ((instruction & 0x0F00) >> 8) as usize;
+
+        self.registers[0xF] = (instruction & 0x1) as u8;
+
+        self.registers[x_register] >>= 1;
+    }
+
+    fn shift_left(&mut self, instruction: u16) {
+        let x_register = ((instruction & 0x0F00) >> 8) as usize;
+
+        self.registers[0xF] = ((instruction & 0x80) >> 7) as u8;
+
+        self.registers[x_register] <<= 1;
     }
 }
 
