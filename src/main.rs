@@ -154,10 +154,10 @@ impl Chip8 {
 
     fn draw(&mut self, instruction: u16) {
         let x = ((instruction & 0x0F00) >> 8) as usize;
-        let x = self.registers[x] % 64;
+        let x = self.registers[x];
 
         let y = ((instruction & 0x00F0) >> 4) as usize;
-        let y = self.registers[y] % 32;
+        let y = self.registers[y];
 
         let height = instruction & 0x000F;
 
@@ -264,10 +264,10 @@ impl Chip8 {
         let x_register = ((instruction & 0x0F00) >> 8) as usize;
         let y_register = ((instruction & 0x00F0) >> 4) as usize;
 
-        self.registers[0xF] = 1;
+        self.registers[0xF] = 0;
 
         if self.registers[x_register] > self.registers[y_register] {
-            self.registers[0xF] = 0;
+            self.registers[0xF] = 1;
         }
 
         self.registers[x_register] =
@@ -278,10 +278,10 @@ impl Chip8 {
         let x_register = ((instruction & 0x0F00) >> 8) as usize;
         let y_register = ((instruction & 0x00F0) >> 4) as usize;
 
-        self.registers[0xF] = 1;
+        self.registers[0xF] = 0;
 
         if self.registers[y_register] > self.registers[x_register] {
-            self.registers[0xF] = 0;
+            self.registers[0xF] = 1;
         }
 
         self.registers[x_register] =
@@ -291,7 +291,7 @@ impl Chip8 {
     fn shift_right(&mut self, instruction: u16) {
         let x_register = ((instruction & 0x0F00) >> 8) as usize;
 
-        self.registers[0xF] = (instruction & 0x1) as u8;
+        self.registers[0xF] = (self.registers[x_register] & 0x1) as u8;
 
         self.registers[x_register] >>= 1;
     }
@@ -299,7 +299,7 @@ impl Chip8 {
     fn shift_left(&mut self, instruction: u16) {
         let x_register = ((instruction & 0x0F00) >> 8) as usize;
 
-        self.registers[0xF] = ((instruction & 0x80) >> 7) as u8;
+        self.registers[0xF] = ((self.registers[x_register] & 0x80) >> 7) as u8;
 
         self.registers[x_register] <<= 1;
     }
