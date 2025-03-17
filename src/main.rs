@@ -105,20 +105,23 @@ impl Chip8 {
                 0x6 => self.shift_right(instruction),
                 0x7 => self.register_y_minus_x(instruction),
                 0xE => self.shift_left(instruction),
-                _ => eprintln!("Unknown instruction: {:?}", instruction),
+                _ => eprintln!("Unknown instruction: {:#06x}", instruction),
             },
             0x9 => self.skip_if_registers_not_equal(instruction),
             0xA => self.set_index_register(instruction),
             0xB => self.jump_with_offset(instruction),
             0xC => self.generate_random_number(instruction),
             0xD => self.draw(instruction),
+            0xE => match instruction & 0x00FF {
+                _ => eprintln!("Unknown instruction: {:#06x}", instruction),
+            },
             0xF => match instruction & 0x00FF {
                 0x33 => self.binary_coded_decimal(instruction),
                 0x55 => self.write_to_memory(instruction),
                 0x65 => self.read_from_memory(instruction),
-                _ => eprintln!("Unknown instruction: {:?}", instruction),
+                _ => eprintln!("Unknown instruction: {:#06x}", instruction),
             },
-            _ => eprintln!("Unknown instruction: {:?}", instruction),
+            _ => eprintln!("Unknown instruction: {:#06x}", instruction),
         }
     }
 
