@@ -114,6 +114,8 @@ impl Chip8 {
             0xD => self.draw(instruction),
             0xF => match instruction & 0x00FF {
                 0x33 => self.binary_coded_decimal(instruction),
+                0x55 => self.write_to_memory(instruction),
+                0x65 => self.read_from_memory(instruction),
                 _ => eprintln!("Unknown instruction: {:?}", instruction),
             },
             _ => eprintln!("Unknown instruction: {:?}", instruction),
@@ -331,6 +333,22 @@ impl Chip8 {
         self.memory[self.index as usize] = hundreds;
         self.memory[(self.index + 1) as usize] = tens;
         self.memory[(self.index + 2) as usize] = ones;
+    }
+
+    fn write_to_memory(&mut self, instruction: u16) {
+        let number_registers_to_write = (instruction & 0x0F00) >> 8;
+
+        for i in 0..=number_registers_to_write {
+            self.memory[(self.index + i) as usize] = self.registers[i as usize];
+        }
+    }
+
+    fn read_from_memory(&mut self, instruction: u16) {
+        let number_registers_to_read = (instruction & 0x0F00) >> 8;
+
+        for i in 0..=number_registers_to_read {
+            self.registers[i as usize] = self.memory[(self.index + i) as usize];
+        }
     }
 }
 
